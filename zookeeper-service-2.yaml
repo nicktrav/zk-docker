@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-2
+spec:
+  ports:
+    - name: client
+      port: 2181
+    - name: followers
+      port: 2888
+    - name: election
+      port: 3888
+  selector:
+    app: zookeeper
+    server-id: "2"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: zookeeper-2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+        server-id: "2"
+    spec:
+      volumes:
+        - name: data
+          emptyDir: {}
+      containers:
+        - name: server
+          image: gcr.io/hackernews-scraper/zk:c25fcd0
+          args:
+            - "2"
+            - "zookeeper-1"
+          ports:
+            - containerPort: 2181
+            - containerPort: 2888
+            - containerPort: 3888
+          volumeMounts:
+            - mountPath: /zookeeper/tmp
+              name: data
